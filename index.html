@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Time Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Automatic Time Tracker</h1>
+        <p>Welcome to the automatic time tracking system. This page tracks your time automatically.</p>
+        
+        <div id="timer">
+            <p id="timerDisplay">Tracking Time...</p>
+        </div>
+
+        <button id="stopButton">Stop Tracking</button>
+
+        <h3>Task Log:</h3>
+
+    </div>
+
+    <script>
+        // Store the start time when the page is loaded
+        const startTime = Date.now();
+        
+        // Display time tracking information
+        const timerDisplay = document.getElementById('timerDisplay');
+        
+        // Update the timer every second
+        let interval = setInterval(() => {
+            let currentTime = Date.now();
+            let timeElapsed = (currentTime - startTime) / 1000; // seconds
+            timerDisplay.textContent = `Time spent: ${timeElapsed.toFixed(2)} seconds`;
+        }, 1000);
+
+        // Function to stop tracking time when the user clicks the "Stop Tracking" button
+        document.getElementById('stopButton').onclick = function() {
+            clearInterval(interval);
+            const endTime = Date.now();
+            
+            // Send start and end times to the backend for logging
+            fetch('/log_time', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_time: startTime,
+                    end_time: endTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Add the new task log to the UI
+                const logItem = document.createElement('li');
+                logItem.textContent = `Task Duration: ${data.duration.toFixed(2)} seconds`;
+                document.getElementById('taskLog').appendChild(logItem);
+            });
+        };
+    </script>
+</body>
+</html>
